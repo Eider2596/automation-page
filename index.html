@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoShop &amp; QA Lab | E2E Automation Practice Platform</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <!-- Top Utility Bar for QA State & LocalStorage Management -->
+  <div class="top-utility-bar" role="region" aria-label="QA Environment Controls">
+    <div class="utility-container">
+      <div>
+        <span id="env-indicator" data-testid="env-indicator">🟢 LocalStorage Mode (No DB Required)</span>
+        <span style="margin-left: 10px; opacity: 0.75;" id="storage-counter" data-testid="storage-counter">Keys active</span>
+      </div>
+      <div class="utility-actions">
+        <button type="button" class="utility-btn" id="btn-theme-toggle" data-testid="theme-toggle-btn" aria-label="Toggle Dark Mode">
+          🌗 Theme
+        </button>
+        <button type="button" class="utility-btn" id="btn-export-state" data-testid="export-state-btn">
+          ⬇️ Export JSON State
+        </button>
+        <button type="button" class="utility-btn danger" id="btn-reset-storage" data-testid="reset-storage-btn">
+          🔄 Reset LocalStorage
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Header & Navigation -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand-logo" id="brand-home-link" data-testid="brand-logo" href="#store">
+        <span>⚡ AutoShop</span>
+        <span class="brand-badge">QA LAB v1.0</span>
+      </a>
+
+      <button
+        type="button"
+        class="mobile-menu-btn"
+        id="mobile-menu-toggle"
+        data-testid="mobile-menu-toggle"
+        aria-label="Toggle navigation menu"
+        aria-expanded="false"
+      >
+        ☰
+      </button>
+
+      <nav class="main-nav" id="main-nav" aria-label="Primary Navigation">
+        <button type="button" class="nav-tab active" data-tab="store" id="nav-store" data-testid="nav-store">
+          🛍️ Storefront
+        </button>
+        <button type="button" class="nav-tab" data-tab="checkout" id="nav-checkout" data-testid="nav-checkout">
+          🛒 Cart &amp; Checkout
+          <span class="badge-pill" id="nav-cart-count" data-testid="nav-cart-count">0</span>
+        </button>
+        <button type="button" class="nav-tab" data-tab="orders" id="nav-orders" data-testid="nav-orders">
+          📦 Orders
+          <span class="badge-pill" id="nav-orders-count" data-testid="nav-orders-count">0</span>
+        </button>
+        <button type="button" class="nav-tab" data-tab="admin" id="nav-admin" data-testid="nav-admin">
+          ⚙️ Admin CRUD
+        </button>
+        <button type="button" class="nav-tab" data-tab="sandbox" id="nav-sandbox" data-testid="nav-sandbox">
+          🧪 QA Sandbox
+        </button>
+      </nav>
+
+      <div class="header-controls">
+        <div id="user-session-badge" data-testid="user-session-badge" style="font-size: 0.85rem; font-weight: 600;">
+          Guest
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" id="btn-open-auth" data-testid="open-auth-btn">
+          Sign In
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-logout" data-testid="logout-btn" style="display: none;">
+          Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="app-main">
+    <!-- ==================== VIEW 1: STOREFRONT ==================== -->
+    <section class="view-section active" id="view-store" data-testid="view-store" aria-label="Storefront Catalog">
+      <div class="store-layout">
+        <!-- Filters Sidebar -->
+        <aside class="filters-sidebar" aria-label="Product Filters">
+          <div class="filter-group">
+            <label class="filter-label" for="filter-search">Search Catalog</label>
+            <input
+              type="search"
+              id="filter-search"
+              name="searchQuery"
+              data-testid="filter-search-input"
+              class="form-control"
+              placeholder="Search by name, SKU, keyword..."
+            />
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" for="filter-category">Category</label>
+            <select id="filter-category" name="category" data-testid="filter-category-select" class="form-control">
+              <option value="ALL">All Categories</option>
+              <option value="Peripherals">Peripherals</option>
+              <option value="Monitors">Monitors</option>
+              <option value="Audio">Audio</option>
+              <option value="Accessories">Accessories</option>
+              <option value="Furniture">Furniture</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" for="filter-price-range">
+              Max Price: $<span id="filter-price-value" data-testid="filter-price-value">500</span>
+            </label>
+            <input
+              type="range"
+              id="filter-price-range"
+              name="maxPrice"
+              data-testid="filter-price-slider"
+              min="50"
+              max="500"
+              step="10"
+              value="500"
+              style="width: 100%;"
+            />
+          </div>
+
+          <div class="filter-group" role="radiogroup" aria-label="Minimum Rating">
+            <span class="filter-label">Minimum Rating</span>
+            <label class="radio-row">
+              <input type="radio" name="minRating" value="0" data-testid="rating-all" checked />
+              <span>All Ratings</span>
+            </label>
+            <label class="radio-row">
+              <input type="radio" name="minRating" value="4.5" data-testid="rating-45" />
+              <span>4.5★ &amp; above</span>
+            </label>
+            <label class="radio-row">
+              <input type="radio" name="minRating" value="4.0" data-testid="rating-40" />
+              <span>4.0★ &amp; above</span>
+            </label>
+          </div>
+
+          <div class="filter-group">
+            <span class="filter-label">Availability &amp; Deals</span>
+            <label class="checkbox-row">
+              <input type="checkbox" id="filter-in-stock" data-testid="filter-in-stock-checkbox" />
+              <span>In Stock Only</span>
+            </label>
+            <label class="checkbox-row">
+              <input type="checkbox" id="filter-on-sale" data-testid="filter-on-sale-checkbox" />
+              <span>On Sale Only</span>
+            </label>
+            <label class="checkbox-row">
+              <input type="checkbox" id="filter-wishlist-only" data-testid="filter-wishlist-checkbox" />
+              <span>Wishlist Favorites Only</span>
+            </label>
+          </div>
+
+          <button type="button" class="btn btn-secondary" style="width: 100%;" id="btn-clear-filters" data-testid="clear-filters-btn">
+            Reset Filters
+          </button>
+        </aside>
+
+        <!-- Product Catalog Area -->
+        <div>
+          <div class="store-toolbar">
+            <div>
+              <strong id="results-count-text" data-testid="results-count">Showing 8 products</strong>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <label for="sort-select" style="font-size: 0.85rem; font-weight: 600;">Sort by:</label>
+              <select id="sort-select" name="sortOrder" data-testid="sort-select" class="form-control" style="width: auto;">
+                <option value="featured">Featured</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="rating-desc">Highest Rated</option>
+                <option value="name-asc">Name: A to Z</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="products-grid" id="products-grid" data-testid="products-grid">
+            <!-- Dynamically rendered by app.js -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 2: CART & CHECKOUT ==================== -->
+    <section class="view-section" id="view-checkout" data-testid="view-checkout" aria-label="Shopping Cart and Checkout">
+      <div class="store-layout" style="grid-template-columns: 1.1fr 0.9fr;">
+        <!-- Left Column: Cart Items & Coupon -->
+        <div>
+          <div class="card-panel">
+            <div class="panel-header">
+              <h2>Shopping Cart</h2>
+              <button type="button" class="btn btn-danger btn-sm" id="btn-clear-cart" data-testid="clear-cart-btn">
+                Empty Cart
+              </button>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table" id="cart-table" data-testid="cart-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Subtotal</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="cart-tbody" data-testid="cart-tbody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Promo Code Box -->
+            <div style="margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+              <input
+                type="text"
+                id="coupon-input"
+                name="couponCode"
+                data-testid="coupon-input"
+                class="form-control"
+                style="max-width: 240px;"
+                placeholder="Promo code (SAVE10, QA2026, FLAT25)"
+              />
+              <button type="button" class="btn btn-secondary" id="btn-apply-coupon" data-testid="apply-coupon-btn">
+                Apply Coupon
+              </button>
+              <span id="coupon-feedback" data-testid="coupon-feedback" style="font-size: 0.85rem; font-weight: 600;"></span>
+            </div>
+
+            <!-- Totals Breakdown -->
+            <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-color); font-size: 0.92rem;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span>Subtotal:</span>
+                <strong id="summary-subtotal" data-testid="summary-subtotal">$0.00</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: var(--success);">
+                <span>Discount:</span>
+                <strong id="summary-discount" data-testid="summary-discount">-$0.00</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span>Shipping:</span>
+                <strong id="summary-shipping" data-testid="summary-shipping">$0.00</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span>Estimated Tax (8%):</span>
+                <strong id="summary-tax" data-testid="summary-tax">$0.00</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 1.15rem; padding-top: 8px; border-top: 1px solid var(--border-color);">
+                <strong>Total Due:</strong>
+                <strong id="summary-total" data-testid="summary-total" style="color: var(--primary);">$0.00</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order Confirmation Box (shown after successful checkout) -->
+          <div class="card-panel" id="order-confirmation-box" data-testid="order-confirmation-box" style="display: none; border-color: var(--success);">
+            <h3 style="color: var(--success); margin-bottom: 8px;">✅ Order Placed Successfully!</h3>
+            <p id="order-confirmation-message" data-testid="order-confirmation-message" style="font-size: 0.9rem; margin-bottom: 10px;"></p>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn btn-primary btn-sm" id="btn-view-orders-after-checkout" data-testid="view-orders-btn">
+                View in Orders History
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-download-last-receipt" data-testid="download-receipt-btn">
+                Download Receipt (.json)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Checkout Form -->
+        <div class="card-panel">
+          <div class="panel-header">
+            <h2>Checkout Details</h2>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-autofill-checkout" data-testid="autofill-checkout-btn">
+              ⚡ Auto-Fill Demo Data
+            </button>
+          </div>
+
+          <form id="checkout-form" data-testid="checkout-form" novalidate>
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="chk-fullname">Full Name *</label>
+                <input type="text" id="chk-fullname" name="fullName" data-testid="checkout-fullname" class="form-control" required placeholder="Alex Tester" />
+              </div>
+              <div class="form-field">
+                <label for="chk-email">Email Address *</label>
+                <input type="email" id="chk-email" name="email" data-testid="checkout-email" class="form-control" required placeholder="alex@qalab.dev" />
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label for="chk-street">Street Address *</label>
+              <input type="text" id="chk-street" name="street" data-testid="checkout-street" class="form-control" required placeholder="742 Automation Blvd" />
+            </div>
+
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="chk-city">City *</label>
+                <input type="text" id="chk-city" name="city" data-testid="checkout-city" class="form-control" required placeholder="Austin" />
+              </div>
+              <div class="form-field">
+                <label for="chk-country">Country *</label>
+                <select id="chk-country" name="country" data-testid="checkout-country" class="form-control" required>
+                  <option value="">Select Country...</option>
+                  <option value="US">United States</option>
+                  <option value="MX">Mexico</option>
+                  <option value="CA">Canada</option>
+                  <option value="ES">Spain</option>
+                  <option value="CO">Colombia</option>
+                  <option value="AR">Argentina</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="chk-zip">Postal / ZIP Code *</label>
+                <input type="text" id="chk-zip" name="zipCode" data-testid="checkout-zip" class="form-control" required placeholder="78701" />
+              </div>
+              <div class="form-field">
+                <label for="chk-shipping">Delivery Method *</label>
+                <select id="chk-shipping" name="shippingMethod" data-testid="checkout-shipping-method" class="form-control">
+                  <option value="standard">Standard Shipping (Free)</option>
+                  <option value="express">Express 2-Day ($12.00)</option>
+                  <option value="overnight">Next-Day Priority ($25.00)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label for="chk-payment">Payment Method *</label>
+              <select id="chk-payment" name="paymentMethod" data-testid="checkout-payment-method" class="form-control">
+                <option value="credit_card">Credit / Debit Card</option>
+                <option value="paypal">PayPal Express</option>
+                <option value="cod">Cash on Delivery (COD)</option>
+              </select>
+            </div>
+
+            <div id="credit-card-fields" data-testid="credit-card-fields" class="form-grid">
+              <div class="form-field">
+                <label for="chk-card-num">Card Number *</label>
+                <input type="text" id="chk-card-num" name="cardNumber" data-testid="checkout-card-number" class="form-control" maxlength="19" placeholder="4532 0151 1283 0366" />
+              </div>
+              <div class="form-field">
+                <label for="chk-card-cvv">CVV *</label>
+                <input type="text" id="chk-card-cvv" name="cardCvv" data-testid="checkout-card-cvv" class="form-control" maxlength="4" placeholder="123" />
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label for="chk-notes">Order Delivery Notes (Optional)</label>
+              <textarea id="chk-notes" name="orderNotes" data-testid="checkout-notes" class="form-control" rows="2" placeholder="Gate code, drop-off instructions..."></textarea>
+            </div>
+
+            <div class="form-field">
+              <label class="checkbox-row">
+                <input type="checkbox" id="chk-terms" name="acceptTerms" data-testid="checkout-terms-checkbox" required />
+                <span>I agree to the QA Automation Terms &amp; Conditions *</span>
+              </label>
+            </div>
+
+            <div id="checkout-error-banner" data-testid="checkout-error-banner" class="result-banner" style="display: none; border-left-color: var(--danger); color: var(--danger); margin-bottom: 12px;"></div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;" id="btn-place-order" data-testid="place-order-btn">
+              Complete Purchase
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 3: ORDERS HISTORY ==================== -->
+    <section class="view-section" id="view-orders" data-testid="view-orders" aria-label="Order History">
+      <div class="card-panel">
+        <div class="panel-header">
+          <div>
+            <h2>Order History (Persisted in LocalStorage)</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Practice table row locators, status filtering, and order cancellation flows.</p>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <label for="order-status-filter" style="font-size: 0.85rem; font-weight: 600;">Status:</label>
+            <select id="order-status-filter" data-testid="order-status-filter" class="form-control" style="width: auto;">
+              <option value="ALL">All Statuses</option>
+              <option value="Processing">Processing</option>
+              <option value="Shipped">Shipped</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table" id="orders-table" data-testid="orders-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="orders-tbody" data-testid="orders-tbody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 4: ADMIN CRUD PANEL ==================== -->
+    <section class="view-section" id="view-admin" data-testid="view-admin" aria-label="Admin Inventory Management">
+      <div class="card-panel">
+        <div class="panel-header">
+          <div>
+            <h2>Inventory CRUD Management</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Create, edit, sort, bulk-delete products and persist changes in LocalStorage.</p>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <input
+              type="search"
+              id="admin-search-input"
+              data-testid="admin-search-input"
+              class="form-control"
+              style="width: 220px;"
+              placeholder="Filter inventory..."
+            />
+            <button type="button" class="btn btn-danger btn-sm" id="btn-admin-bulk-delete" data-testid="admin-bulk-delete-btn" disabled>
+              🗑️ Delete Selected (<span id="admin-selected-count">0</span>)
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-admin-add-product" data-testid="admin-add-product-btn">
+              ➕ Add New Product
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table" id="admin-products-table" data-testid="admin-products-table">
+            <thead>
+              <tr>
+                <th>
+                  <input type="checkbox" id="admin-select-all" data-testid="admin-select-all" aria-label="Select all products" />
+                </th>
+                <th data-sort="id">ID ↕</th>
+                <th data-sort="sku">SKU ↕</th>
+                <th data-sort="name">Product Name ↕</th>
+                <th data-sort="category">Category ↕</th>
+                <th data-sort="price">Price ↕</th>
+                <th data-sort="stock">Stock ↕</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-products-tbody" data-testid="admin-products-tbody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 5: QA AUTOMATION SANDBOX ==================== -->
+    <section class="view-section" id="view-sandbox" data-testid="view-sandbox" aria-label="QA Automation Sandbox">
+      <div style="margin-bottom: 18px;">
+        <h2>🧪 QA Automation Sandbox &amp; Locator Playground</h2>
+        <p style="font-size: 0.9rem; color: var(--text-muted);">
+          Practice explicit waits, dynamic IDs, XPath axes, Shadow DOM, Iframes, Alerts, Drag &amp; Drop, File Uploads, Hover/Right-Click, and Window Handles.
+        </p>
+      </div>
+
+      <div class="sandbox-grid">
+        <!-- 1. Dynamic Waits & Async Elements -->
+        <div class="sandbox-card" id="card-waits" data-testid="sandbox-card-waits">
+          <h3>
+            <span>1. Dynamic Waits &amp; Async States</span>
+            <span class="locator-hint">Explicit Waits</span>
+          </h3>
+          <p style="font-size: 0.83rem; color: var(--text-muted);">
+            Click to trigger a 3-second asynchronous process. Practice waiting for spinner disappearance and element visibility/enablement.
+          </p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary btn-sm" id="btn-trigger-async" data-testid="trigger-async-btn">
+              Start 3s Async Task
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-delayed-enable" data-testid="delayed-enable-btn" disabled>
+              Disabled Action Button
+            </button>
+          </div>
+          <div id="async-spinner" data-testid="async-spinner" style="display: none; font-size: 0.85rem; font-weight: 600; color: var(--warning);">
+            ⏳ Loading dynamic payload... please wait...
+          </div>
+          <div id="async-secret-box" data-testid="async-secret-box" class="result-banner" style="display: none;">
+            🎉 Secret Async Token: <strong id="async-token-value" data-testid="async-token-value"></strong>
+          </div>
+        </div>
+
+        <!-- 2. Dynamic IDs & XPath Axes Table -->
+        <div class="sandbox-card" id="card-dynamic-ids" data-testid="sandbox-card-dynamic-ids">
+          <h3>
+            <span>2. Dynamic IDs &amp; Relative Locators</span>
+            <span class="locator-hint">XPath / CSS Axes</span>
+          </h3>
+          <p style="font-size: 0.83rem; color: var(--text-muted);">
+            Button IDs regenerate randomly on every click! Locate the target button using row text (e.g., <code>Database Cluster</code>) or sibling axes.
+          </p>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-regenerate-ids" data-testid="regenerate-ids-btn">
+            🔀 Regenerate Random IDs
+          </button>
+          <table class="data-table" id="dynamic-id-table" data-testid="dynamic-id-table">
+            <thead>
+              <tr>
+                <th>Service Name</th>
+                <th>CPU Load</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="dynamic-id-tbody">
+              <!-- Populated dynamically with random IDs -->
+            </tbody>
+          </table>
+          <div class="result-banner" id="dynamic-id-result" data-testid="dynamic-id-result">
+            Click "Restart" on any service row above.
+          </div>
+        </div>
+
+        <!-- 3. JS Alerts, Confirms, Prompts & Custom Modal -->
+        <div class="sandbox-card" id="card-dialogs" data-testid="sandbox-card-dialogs">
+          <h3>
+            <span>3. Native Dialogs &amp; Popups</span>
+            <span class="locator-hint">Alert / Confirm / Prompt</span>
+          </h3>
+          <p style="font-size: 0.83rem; color: var(--text-muted);">
+            Practice handling native browser dialogs and custom DOM modal overlays.
+          </p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-js-alert" data-testid="js-alert-btn">
+              Trigger Alert
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-js-confirm" data-testid="js-confirm-btn">
+              Trigger Confirm
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-js-prompt" data-testid="js-prompt-btn">
+              Trigger Prompt
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-custom-modal" data-testid="custom-modal-btn">
+              Open DOM Modal
+            </button>
+          </div>
+          <div class="result-banner" id="dialog-result" data-testid="dialog-result">
+            Dialog response will appear here.
+          </div>
+        </div>
+
+        <!-- 4. Shadow DOM Web Component -->
+        <div class="sandbox-card" id="card-shadow-dom" data-testid="sandbox-card-shadow-dom">
+          <h3>
+            <span>4. Shadow DOM Encapsulation</span>
+            <span class="locator-hint">#shadow-root (open)</span>
+          </h3>
+          <p style="font-size: 0.83rem; color: var(--text-muted);">
+            The widget below is rendered inside an encapsulated Shadow Root. Pierce the shadow boundary to type and verify.
+          </p>
+          <qa-shadow-widget id="shadow-host" data-testid="shadow-host"></qa-shadow-widget>
+        </div>
+
+        <!-- 5. Embedded Iframe -->
+        <div class="sandbox-card" id="card-iframe" data-testid="sandbox-card-iframe">
+          <h3>
+            <span>5. Embedded Iframe Document</span>
+            <span class="locator-hint">switchTo.frame</span>
+          </h3>
+          <p style="font-size: 0.83rem; color: var(--text-muted);">
+            Switch context into <code>#qa-iframe</code> to interact with the isolated token form inside.
+          </p>
+          <iframe
+            id="qa-iframe"
+            name="qa-iframe"
+            data-testid="qa-iframe"
+            src="iframe-content.html"
+            title="QA Isolated Verification Frame"
+            style="width: 100%; height: 255px; border: 1px solid var(--border-color); border-radius: 8px;"
+          ></iframe>
+        </div>
+
+        <!-- 6. Drag & Drop Kanban Board -->
+        <div class="sandbox-card" id="card-kanban" data-testid="sandbox-card-kanban">
+          <h3>
+            <span>6. Drag &amp; Drop Task Board</span>
+            <span class="locator-hint">HTML5 DragEvents</span>
+          </h3>
+          <p style="font-size: 0.83rem; color: var(--text-muted);">
+            Drag tasks between columns or use the quick-advance arrow button. State is saved in LocalStorage.
+          </p>
+          <div class="kanban-board" id="kanban-board" data-testid="kanban-board">
+            <div class="kanban-col" data-status="todo" id="kanban-col-todo" data-testid="kanban-col-todo">
+              <div class="kanban-col-header"><span>To Do</span><span id="count-todo">0</span></div>
+              <div class="kanban-items" id="kanban-list-todo"></div>
+            </div>
+            <div class="kanban-col" data-status="inprogress" id="kanban-col-inprogress" data-testid="kanban-col-inprogress">
+              <div class="kanban-col-header"><span>In Progress</span><span id="count-inprogress">0</span></div>
+              <div class="kanban-items" id="kanban-list-inprogress"></div>
+            </div>
+            <div class="kanban-col" data-status="done" id="kanban-col-done" data-testid="kanban-col-done">
+              <div class="kanban-col-header"><span>Done</span><span id="count-done">0</span></div>
+              <div class="kanban-items" id="kanban-list-done"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. File Upload & Download -->
+        <div class="sandbox-card" id="card-files" data-testid="sandbox-card-files">
+          <h3>
+            <span>7. File Upload &amp; Dynamic Download</span>
+            <span class="locator-hint">input[type=file]</span>
+          </h3>
+          <div class="form-field">
+            <label for="qa-file-upload">Select File(s) to Upload</label>
+            <input
+              type="file"
+              id="qa-file-upload"
+              name="qaFileUpload"
+              data-testid="qa-file-upload"
+              class="form-control"
+              multiple
+            />
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-download-csv" data-testid="download-csv-btn">
+              ⬇️ Download Inventory (.csv)
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-download-txt" data-testid="download-txt-btn">
+              ⬇️ Download Test Report (.txt)
+            </button>
+          </div>
+          <div class="result-banner" id="file-upload-result" data-testid="file-upload-result">
+            No files uploaded yet.
+          </div>
+        </div>
+
+        <!-- 8. Advanced Mouse Interactions -->
+        <div class="sandbox-card" id="card-mouse" data-testid="sandbox-card-mouse">
+          <h3>
+            <span>8. Hover, Double-Click &amp; Right-Click</span>
+            <span class="locator-hint">Action Chains</span>
+          </h3>
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <div class="hover-dropdown-wrapper" id="hover-menu-trigger" data-testid="hover-menu-trigger">
+              <button type="button" class="btn btn-secondary btn-sm">
+                🎯 Hover Over Me
+              </button>
+              <div class="hover-dropdown-menu" data-testid="hover-dropdown-menu">
+                <button type="button" class="hover-menu-item" data-hover-action="Export Report" data-testid="hover-item-1">Export Report</button>
+                <button type="button" class="hover-menu-item" data-hover-action="Run Diagnostics" data-testid="hover-item-2">Run Diagnostics</button>
+                <button type="button" class="hover-menu-item" data-hover-action="Clear Cache" data-testid="hover-item-3">Clear Cache</button>
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-sm" id="btn-double-click" data-testid="double-click-btn">
+              ⚡ Double-Click Me (<span id="dblclick-count" data-testid="dblclick-count">0</span>)
+            </button>
+          </div>
+
+          <div class="context-box" id="context-menu-area" data-testid="context-menu-area">
+            🖱️ Right-Click (Context Click) Inside This Dashed Zone
+          </div>
+
+          <div class="result-banner" id="mouse-action-result" data-testid="mouse-action-result">
+            Perform a hover, double-click, or right-click action.
+          </div>
+        </div>
+
+        <!-- 9. Progress Bar Stop Challenge & Pickers -->
+        <div class="sandbox-card" id="card-progress" data-testid="sandbox-card-progress">
+          <h3>
+            <span>9. Progress Bar &amp; Input Pickers</span>
+            <span class="locator-hint">Polling / Attributes</span>
+          </h3>
+          <p style="font-size: 0.83rem; color: var(--text-muted);">
+            Challenge: Start the progress bar and stop it as close to <strong>75%</strong> as possible!
+          </p>
+          <div class="progress-track">
+            <div class="progress-fill" id="qa-progress-bar" data-testid="qa-progress-bar" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" style="width: 25%;">
+              25%
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-primary btn-sm" id="btn-progress-start" data-testid="progress-start-btn">Start</button>
+            <button type="button" class="btn btn-danger btn-sm" id="btn-progress-stop" data-testid="progress-stop-btn">Stop</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-progress-reset" data-testid="progress-reset-btn">Reset</button>
+          </div>
+          <div class="form-grid" style="margin-top: 6px;">
+            <div>
+              <label for="qa-date-picker" style="font-size: 0.78rem; font-weight: 600;">Target Date</label>
+              <input type="date" id="qa-date-picker" data-testid="qa-date-picker" class="form-control" value="2026-10-28" />
+            </div>
+            <div>
+              <label for="qa-color-picker" style="font-size: 0.78rem; font-weight: 600;">Accent Color</label>
+              <input type="color" id="qa-color-picker" data-testid="qa-color-picker" class="form-control" value="#2563eb" style="height: 38px; padding: 4px;" />
+            </div>
+          </div>
+          <div class="result-banner" id="progress-result" data-testid="progress-result">
+            Progress bar idle at 25%.
+          </div>
+        </div>
+
+        <!-- 10. Multi-Tab, Popup Window & Stale Element -->
+        <div class="sandbox-card" id="card-windows" data-testid="sandbox-card-windows">
+          <h3>
+            <span>10. Multi-Tab, Windows &amp; Stale DOM</span>
+            <span class="locator-hint">Window Handles</span>
+          </h3>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a
+              href="iframe-content.html?mode=tab"
+              target="_blank"
+              rel="noopener"
+              class="btn btn-secondary btn-sm"
+              id="link-open-new-tab"
+              data-testid="open-new-tab-link"
+              style="text-decoration: none;"
+            >
+              ↗️ Open New Tab
+            </a>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-open-popup-window" data-testid="open-popup-window-btn">
+              🪟 Open Popup Window
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-recreate-stale-el" data-testid="recreate-stale-btn">
+              ♻️ Mutate / Replace DOM Node
+            </button>
+          </div>
+          <div id="stale-element-wrapper" data-testid="stale-element-wrapper">
+            <div class="result-banner" id="stale-target-element" data-testid="stale-target-element" data-generation="1">
+              Target Node Generation #1 (Ready for StaleElementReference test)
+            </div>
+          </div>
+        </div>
+
+        <!-- 11. Infinite Scroll List -->
+        <div class="sandbox-card" id="card-scroll" data-testid="sandbox-card-scroll">
+          <h3>
+            <span>11. Lazy Infinite Scroll Container</span>
+            <span class="locator-hint">scrollIntoView</span>
+          </h3>
+          <p style="font-size: 0.83rem; color: var(--text-muted);">
+            Scroll to the bottom of the container to dynamically load more audit log entries (up to 50 items).
+          </p>
+          <div class="infinite-scroll-box" id="infinite-scroll-box" data-testid="infinite-scroll-box" tabindex="0">
+            <!-- Populated dynamically -->
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-muted);" id="infinite-scroll-status" data-testid="infinite-scroll-status">
+            Loaded 10 of 50 items
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Custom Right-Click Context Menu -->
+  <div class="custom-context-menu" id="custom-context-menu" data-testid="custom-context-menu" role="menu">
+    <button type="button" class="hover-menu-item" data-ctx-action="Inspect Element">🔍 Inspect Node</button>
+    <button type="button" class="hover-menu-item" data-ctx-action="Copy XPath">📋 Copy XPath</button>
+    <button type="button" class="hover-menu-item" data-ctx-action="Reset Widget">🔄 Reset Widget</button>
+  </div>
+
+  <!-- ==================== MODAL 1: AUTHENTICATION (LOGIN / REGISTER) ==================== -->
+  <div class="modal-backdrop" id="auth-modal" data-testid="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="auth-modal-title">Account Authentication</h3>
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-close-auth-modal" data-testid="close-auth-modal-btn">✕</button>
+      </div>
+
+      <!-- Demo Credentials Quick-Fill -->
+      <div style="background: var(--bg-muted); padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; font-size: 0.8rem;">
+        <div style="font-weight: 700; margin-bottom: 6px;">Quick-Fill Demo Accounts (Password: <code>SecretPassword123!</code>):</div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <button type="button" class="btn btn-secondary btn-sm" data-quick-user="standard_user" data-testid="quickfill-standard-user">
+            👤 standard_user
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" data-quick-user="admin_user" data-testid="quickfill-admin-user">
+            🛡️ admin_user
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" data-quick-user="locked_out_user" data-testid="quickfill-locked-user">
+            🔒 locked_out_user
+          </button>
+        </div>
+      </div>
+
+      <form id="login-form" data-testid="login-form">
+        <div class="form-field">
+          <label for="login-username">Username or Email</label>
+          <input type="text" id="login-username" name="username" data-testid="login-username-input" class="form-control" required placeholder="standard_user" />
+        </div>
+        <div class="form-field">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" name="password" data-testid="login-password-input" class="form-control" required placeholder="SecretPassword123!" />
+        </div>
+        <div id="login-error-msg" data-testid="login-error-msg" class="result-banner" style="display: none; border-left-color: var(--danger); color: var(--danger); margin-bottom: 12px;"></div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;" id="btn-login-submit" data-testid="login-submit-btn">
+          Sign In
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: ADMIN ADD/EDIT PRODUCT ==================== -->
+  <div class="modal-backdrop" id="product-modal" data-testid="product-modal" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="product-modal-title">Add / Edit Product</h3>
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-close-product-modal" data-testid="close-product-modal-btn">✕</button>
+      </div>
+
+      <form id="product-form" data-testid="product-form">
+        <input type="hidden" id="prd-id" name="id" />
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="prd-name">Product Name *</label>
+            <input type="text" id="prd-name" name="name" data-testid="product-name-input" class="form-control" required />
+          </div>
+          <div class="form-field">
+            <label for="prd-sku">SKU Code *</label>
+            <input type="text" id="prd-sku" name="sku" data-testid="product-sku-input" class="form-control" required />
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="prd-category">Category *</label>
+            <select id="prd-category" name="category" data-testid="product-category-input" class="form-control" required>
+              <option value="Peripherals">Peripherals</option>
+              <option value="Monitors">Monitors</option>
+              <option value="Audio">Audio</option>
+              <option value="Accessories">Accessories</option>
+              <option value="Furniture">Furniture</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="prd-price">Price (USD) *</label>
+            <input type="number" id="prd-price" name="price" data-testid="product-price-input" class="form-control" step="0.01" min="1" required />
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="prd-stock">Stock Quantity *</label>
+            <input type="number" id="prd-stock" name="stock" data-testid="product-stock-input" class="form-control" min="0" required />
+          </div>
+          <div class="form-field">
+            <label for="prd-rating">Rating (1.0 - 5.0)</label>
+            <input type="number" id="prd-rating" name="rating" data-testid="product-rating-input" class="form-control" step="0.1" min="1" max="5" value="4.5" />
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="prd-desc">Description</label>
+          <textarea id="prd-desc" name="description" data-testid="product-desc-input" class="form-control" rows="2"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 16px; margin-bottom: 14px;">
+          <label class="checkbox-row">
+            <input type="checkbox" id="prd-on-sale" data-testid="product-onsale-checkbox" />
+            <span>Mark On Sale</span>
+          </label>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px;">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-product" data-testid="cancel-product-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-product" data-testid="save-product-btn">Save Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 3: SANDBOX CUSTOM DOM MODAL ==================== -->
+  <div class="modal-backdrop" id="sandbox-custom-modal" data-testid="sandbox-custom-modal" role="dialog" aria-modal="true" aria-labelledby="sandbox-modal-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="sandbox-modal-title">Custom DOM Overlay Dialog</h3>
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-close-sandbox-modal" data-testid="close-sandbox-modal-btn">✕</button>
+      </div>
+      <p style="font-size: 0.9rem; margin-bottom: 12px;">
+        Unlike native <code>window.alert()</code>, this modal is rendered in the DOM. Enter a verification phrase below to confirm interaction:
+      </p>
+      <div class="form-field">
+        <label for="sandbox-modal-input">Verification Phrase</label>
+        <input type="text" id="sandbox-modal-input" data-testid="sandbox-modal-input" class="form-control" placeholder="Type anything..." />
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" class="btn btn-primary" id="btn-confirm-sandbox-modal" data-testid="confirm-sandbox-modal-btn">
+          Confirm Modal Action
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications Container -->
+  <div class="toast-container" id="toast-container" data-testid="toast-container" aria-live="polite"></div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <p>
+      <strong>AutoShop &amp; QA Lab</strong> — Built with 100% LocalStorage Persistence for E2E Test Automation, Locator Practice &amp; CI/CD Pipelines.
+    </p>
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

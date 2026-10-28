@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Embedded Frame & Popup Target | AutoShop QA Lab</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --primary: #2563eb;
+      --border: #e2e8f0;
+      --success: #16a34a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 16px;
+      line-height: 1.5;
+    }
+    .frame-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .frame-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .badge {
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    input, select {
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--primary);
+      color: #fff;
+    }
+    button.secondary {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+    .status-box {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      font-size: 0.85rem;
+      border-left: 4px solid var(--primary);
+    }
+    .status-box.verified {
+      background: #dcfce7;
+      border-left-color: var(--success);
+      color: #14532d;
+    }
+  </style>
+</head>
+<body>
+  <div class="frame-card" id="iframe-container" data-testid="iframe-container">
+    <div class="frame-header">
+      <strong id="frame-title" data-testid="iframe-title">Isolated Security Verification Frame</strong>
+      <span class="badge" id="frame-mode-badge" data-testid="iframe-mode-badge">IFRAME MODE</span>
+    </div>
+
+    <form id="iframe-form" data-testid="iframe-form">
+      <div class="form-row">
+        <label for="iframe-token-input">Security Token Code (Try: <code>QA-FRAME-99</code>)</label>
+        <input
+          type="text"
+          id="iframe-token-input"
+          name="iframeToken"
+          data-testid="iframe-token-input"
+          placeholder="Enter token inside iframe..."
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="form-row">
+        <label for="iframe-env-select">Target Environment</label>
+        <select id="iframe-env-select" name="iframeEnv" data-testid="iframe-env-select">
+          <option value="staging">Staging Environment</option>
+          <option value="production">Production Environment</option>
+          <option value="sandbox">QA Sandbox</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button type="submit" id="iframe-submit-btn" data-testid="iframe-submit-btn">
+          Verify Inside Frame
+        </button>
+        <button type="button" class="secondary" id="iframe-counter-btn" data-testid="iframe-counter-btn">
+          Frame Clicks: <span id="iframe-click-count" data-testid="iframe-click-count">0</span>
+        </button>
+      </div>
+    </form>
+
+    <div class="status-box" id="iframe-result" data-testid="iframe-result" role="status">
+      Awaiting input inside isolated document...
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get('mode') || 'iframe';
+    const badge = document.getElementById('frame-mode-badge');
+    const title = document.getElementById('frame-title');
+
+    if (mode === 'popup' || mode === 'tab') {
+      badge.textContent = mode.toUpperCase() + ' WINDOW';
+      title.textContent = 'External Child Window / Tab Target';
+      document.title = 'External Child Window | AutoShop QA Lab';
+    }
+
+    let clicks = 0;
+    const counterBtn = document.getElementById('iframe-counter-btn');
+    const countSpan = document.getElementById('iframe-click-count');
+    const form = document.getElementById('iframe-form');
+    const resultBox = document.getElementById('iframe-result');
+
+    counterBtn.addEventListener('click', () => {
+      clicks += 1;
+      countSpan.textContent = String(clicks);
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const token = document.getElementById('iframe-token-input').value.trim();
+      const env = document.getElementById('iframe-env-select').value;
+      if (!token) {
+        resultBox.className = 'status-box';
+        resultBox.textContent = 'Error: Please enter a token code.';
+        return;
+      }
+      resultBox.className = 'status-box verified';
+      resultBox.textContent = `Verified token "${token}" on [${env.toUpperCase()}] with ${clicks} clicks!`;
+      localStorage.setItem('qa_shop_last_iframe_verification', JSON.stringify({
+        token,
+        env,
+        clicks,
+        timestamp: new Date().toISOString()
+      }));
+    });
+  </script>
+</body>
+</html>
