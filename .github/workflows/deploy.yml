@@ -1,4 +1,4 @@
-name: CI/CD — Deploy AutoShop QA Lab to GitHub Pages
+name: CI/CD - Deploy AutoShop QA Lab to GitHub Pages
 
 on:
   push:
@@ -6,19 +6,16 @@ on:
       - main
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow one concurrent deployment
 concurrency:
   group: "pages"
   cancel-in-progress: true
 
 jobs:
-  # Job 1: Quality Gate / Smoke Check (Ready for Playwright/Cypress/Selenium E2E tests)
   verify-project:
     runs-on: ubuntu-latest
     steps:
@@ -34,7 +31,6 @@ jobs:
           test -f js/store.js
           echo "All core application files verified!"
 
-  # Job 2: Automatic Deployment to GitHub Pages
   deploy-pages:
     needs: verify-project
     environment:
@@ -56,3 +52,15 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  trigger-e2e:
+    needs: deploy-pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch E2E tests to ui-e2e repo
+        run: |
+          curl --fail-with-body -X POST \
+            -H "Authorization: Bearer ${{ secrets.TESTS_REPO_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/TU_USUARIO/ui-e2e/dispatches \
+            -d '{"event_type":"app-deployed"}'
