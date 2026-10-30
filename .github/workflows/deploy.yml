@@ -62,5 +62,5 @@ jobs:
           curl --fail-with-body -X POST \
             -H "Authorization: Bearer ${{ secrets.TESTS_REPO_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/TU_USUARIO/ui-e2e/dispatches \
+            https://api.github.com/repos/Eider2596/ui-e2e/dispatches \
             -d '{"event_type":"app-deployed"}'
