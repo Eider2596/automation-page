@@ -1,11 +1,66 @@
-trigger-e2e:
-  needs: deploy-pages
-  runs-on: ubuntu-latest
-  steps:
-    - name: Dispatch E2E tests
-      run: |
-        curl -X POST \
-          -H "Authorization: Bearer ${{ secrets.TESTS_REPO_TOKEN }}" \
-          -H "Accept: application/vnd.github+json" \
-          https://api.github.com/repos/TU_USUARIO/REPO_DE_TESTS/dispatches \
-          -d '{"event_type":"app-deployed"}'
+name: CI/CD - Deploy AutoShop QA Lab to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  verify-project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify required static files exist
+        run: |
+          test -f index.html
+          test -f iframe-content.html
+          test -f css/styles.css
+          test -f js/app.js
+          test -f js/store.js
+          echo "All core application files verified!"
+
+  deploy-pages:
+    needs: verify-project
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload static site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  trigger-e2e:
+    needs: deploy-pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch E2E tests to ui-e2e repo
+        run: |
+          curl --fail-with-body -X POST \
+            -H "Authorization: Bearer ${{ secrets.TESTS_REPO_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/TU_USUARIO/ui-e2e/dispatches \
+            -d '{"event_type":"app-deployed"}'
